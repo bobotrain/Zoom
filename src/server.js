@@ -28,7 +28,7 @@ const sockets = [];
 
 wss.on("connection", (socket) => {
    sockets.push(socket);
-
+   socket["nickname"] = "Anonymous"
    // 브라우저가 연결됐을 때.
    console.log("Connected to Browser");
    //브라우저가 종료되었을 때를 의미하는 close
@@ -37,8 +37,16 @@ wss.on("connection", (socket) => {
    //브라우저에서 서버로 메시지가 보내졌을때, 콘솔(터미널)에 그 내용을 출력
    socket.on("message", (msg) => {
         const message = JSON.parse(msg);
-        console.log(message.type, message.payload);
-        sockets.forEach(aSocket => aSocket.send(`${message}`));
+        switch(message.type){
+            case "new_message":
+                sockets.forEach(aSocket => aSocket.send(`${socket.nickname}:
+                ${message.payload}`));
+                break;
+            case "nickname":
+                socket["nickname"] =message.payload;
+                break;
+        }
+        
    });
 
    //브라우저로 메시지 전송 테스트
