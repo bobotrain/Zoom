@@ -19,14 +19,13 @@ const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
     socket.on("enter_room", (roomName,done) => {
-       console.log(roomName);
-       //소켓 룸 고유번호
-       console.log(socket.id);
-       //소켓 룸 모두 조회     
-       console.log(socket.rooms);
-       //소켓 룸 생성 및 접속
+
+        //브라우저가 요청한 콜백을 의미 - showRoom()을 의미.
+        done();
+       //소켓 룸 생성 및 접속 - 해당 roomName으로 조인시킴
        socket.join(roomName);
-       console.log(socket.rooms);
+       //to메서드
+       socket.to(roomName).emit("welcome");
     });
 });
 
