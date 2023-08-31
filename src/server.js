@@ -1,9 +1,6 @@
-//console.log("hello");
 import http from 'http';
-import WebSocket from 'ws';
+import SocketIO from "socket.io";
 import express from 'express';
-
-
 
 const app = express();
 
@@ -17,40 +14,21 @@ app.get("/", (req, res) => res.render("home"));
 //만약홈이 아닌 다른 주소로 get요청을 보내더라도 홈으로 리다이렉션하게 예외처리함
 app.get("/*", (req, res) => res.redirect("/"));
 
+const httpServer = http.createServer(app);
+const wsServer = SocketIO(httpServer);
+
+wsServer.on("connection", (socket) => {
+    socket.on("enter_room", (roomName,done) => {
+       console.log(roomName);
+       //소켓 룸 고유번호
+       console.log(socket.id);
+       //소켓 룸 모두 조회     
+       console.log(socket.rooms);
+       //소켓 룸 생성 및 접속
+       socket.join(roomName);
+       console.log(socket.rooms);
+    });
+});
 
 const handleListen = () => console.log("Listening on http://localhost:3000");
-//app.listen(3000, handleListen);
-
-const server = http.createServer(app);
-const wss = new WebSocket.Server({server});
-
-const sockets = [];
-
-wss.on("connection", (socket) => {
-   sockets.push(socket);
-   socket["nickname"] = "Anonymous"
-   // 브라우저가 연결됐을 때.
-   console.log("Connected to Browser");
-   //브라우저가 종료되었을 때를 의미하는 close
-   socket.on("close", () => console.log("Disconnected from Browser"));
-
-   //브라우저에서 서버로 메시지가 보내졌을때, 콘솔(터미널)에 그 내용을 출력
-   socket.on("message", (msg) => {
-        const message = JSON.parse(msg);
-        switch(message.type){
-            case "new_message":
-                sockets.forEach(aSocket => aSocket.send(`${socket.nickname}:
-                ${message.payload}`));
-                break;
-            case "nickname":
-                socket["nickname"] =message.payload;
-                break;
-        }
-        
-   });
-
-   //브라우저로 메시지 전송 테스트
-   //socket.send("hello!!");
-})
-
-server.listen(3000,handleListen);
+httpServer.listen(3000,handleListen);
