@@ -19,11 +19,33 @@ function addMessage(message){
     ul.appendChild(li);
 }
 
+function handleMessageSubmit(event){
+    event.preventDefault();
+    const input = room.querySelector("#msg input");
+    const value = input.value;
+    socket.emit("new_message", value, roomName, () => {
+        addMessage(`You: ${value}`);
+    });
+    input.value = "";
+}
+
+function handleNicknameSubmit(event){
+    event.preventDefault();
+    const input = room.querySelector("#name input");
+    const value = input.value;
+    socket.emit("nickname", value);
+    input.value = "";
+}
+
 function showRoom(){
     welcome.hidden = true;
     room.hidden = false;
     const h3 = room.querySelector("h3");
     h3.innerText  =`Room ${roomName}`;
+    const msgform = room.querySelector("#msg");
+    const nameForm = room.querySelector("#name");
+    msgform.addEventListener("submit", handleMessageSubmit);
+    nameForm.addEventListener("submit", handleNicknameSubmit);
 }
 
 function handleRoomSubmit(event){
@@ -37,6 +59,14 @@ function handleRoomSubmit(event){
 form.addEventListener("submit", handleRoomSubmit);
 
 //서버로부터 welcome받으면 메시지 날리도록 체킹
-socket.on("welcome", () => {
-    addMessage("someone joined!");
-})
+socket.on("welcome", (userNickname) => {
+    addMessage(`${userNickname} arrived!`);
+});
+
+socket.on("bye", (userNickname) => {
+    addMessage(`${userNickname} left!`);
+});
+
+socket.on("new_message", (msg) => {
+    addMessage(msg);
+});

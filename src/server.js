@@ -18,6 +18,8 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
+    //닉네임이 입력되기 전까지는 익명으로 표시
+    socket["nickname"] = "Anon";
     socket.on("enter_room", (roomName,done) => {
 
         //브라우저가 요청한 콜백을 의미 - showRoom()을 의미.
@@ -25,8 +27,18 @@ wsServer.on("connection", (socket) => {
        //소켓 룸 생성 및 접속 - 해당 roomName으로 조인시킴
        socket.join(roomName);
        //to메서드
-       socket.to(roomName).emit("welcome");
+       socket.to(roomName).emit("welcome", socket.nickname);
     });
+    socket.on("disconnecting", () =>{
+        socket.rooms.forEach(room =>
+             socket.to(room).emit("bye", socket.nickname));
+    });
+    socket.on("new_message", (msg, room, done) =>{
+        socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
+        done();
+    })
+    //닉네임 세이브
+    socket.on("nickname", (nickname) => (socket["nickname"] = nickname));
 });
 
 const handleListen = () => console.log("Listening on http://localhost:3000");
