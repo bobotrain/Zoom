@@ -1,7 +1,6 @@
 import http from 'http';
-import express from 'express';
-import { Server } from "socket.io";
-import { instrument } from "@socket.io/admin-ui";
+import SocketIO from "socket.io";
+import express from "express";
 
 
 const app = express();
@@ -17,69 +16,7 @@ app.get("/", (req, res) => res.render("home"));
 app.get("/*", (req, res) => res.redirect("/"));
 
 const httpServer = http.createServer(app);
-const wsServer = new Server(httpServer, {
-    cors: {
-        origin: ["https://admin.socket.io"],
-        credentials: true
-    }
-});
-
-instrument(wsServer, {
-    auth: false
-});
-
-function publicRooms() {
-    const {
-        sockets: {
-            adapter: {sids, rooms},
-        },
-    }= wsServer;
-
-    const publicRooms = [];
-    rooms.forEach((_, key) => {
-        if(sids.get(key) === undefined){
-            publicRooms.push(key)
-        }
-    })
-    return publicRooms;
-}
-
-function countRoom(roomName){
-    return wsServer.sockets.adapter.rooms.get(roomName)?.size;
-}
-
-wsServer.on("connection", (socket) => {
-    //닉네임이 입력되기 전까지는 익명으로 표시
-    socket["nickname"] = "Anon";
-    socket.onAny((event) => {
-        console.log(wsServer.sockets.adapter);
-        console.log(`Socket Event: ${event}`);
-        
-    });
-    socket.on("enter_room", (roomName,done) => {
-        done();
-       socket.join(roomName);
-       //to메서드
-       socket.to(roomName).emit("welcome", socket.nickname, countRoom(roomName));
-       wsServer.sockets.emit("room_change", publicRooms());
-    });
-    //완전히 해제되기 직전
-    socket.on("disconnecting", () =>{
-        socket.rooms.forEach(room =>
-             socket.to(room).emit("bye", socket.nickname, countRoom(room) - 1));
-    });
-    //완전히 해제되었을 때.
-    socket.on("disconnect", () =>{
-        wsServer.sockets.emit("room_change", publicRooms());
-    });
-
-    socket.on("new_message", (msg, room, done) =>{
-        socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
-        done();
-    })
-    //닉네임 세이브
-    socket.on("nickname", (nickname) => (socket["nickname"] = nickname));
-});
+const wsServer = SocketIO(httpServer);
 
 const handleListen = () => console.log("Listening on http://localhost:3000");
 httpServer.listen(3000,handleListen);
