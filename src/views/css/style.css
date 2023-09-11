@@ -1,0 +1,30 @@
+body {
+  height: 100vh;
+  width: 100vw;
+  background-image: url("https://user-images.githubusercontent.com/99077276/180286391-24becd48-34e9-4792-b1cb-b5c02e0c3007.jpg");
+  background-repeat : no-repeat;
+  background-size : cover;
+}
+
+header h1 {
+  outline: 8px ridge rgba(20, 17, 17, 0.6);
+  border-radius: 2rem;
+  text-align: center;
+  color: rgb(3, 3, 3);
+  font-size: 35px;
+  font-weight: bold;
+  margin: 40px 0;
+}
+
+img {
+  width: 40px;
+}
+
+
+main {
+  outline: 8px ridge rgba(255, 255, 255, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
